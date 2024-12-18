@@ -8,10 +8,11 @@ export default function MainLayout({
   }) {
   
     return (
-      <section className="space-y-3">
-          <Navbar />
-          {children}
-          <Footer />
-        </section>
+      <section className="flex gap-3 flex-col min-h-screen">
+        <Navbar />
+        {children}
+        <Footer />
+      </section>
+      
     )
   }

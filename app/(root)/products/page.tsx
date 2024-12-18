@@ -1,7 +1,7 @@
 'use client'
 
-import { Category, Product, QueryParams } from "@/types/index.types"
-import { useRouter, useSearchParams } from "next/navigation"
+import { Product, QueryParams } from "@/types/index.types"
+import { notFound, useRouter, useSearchParams } from "next/navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,17 +31,25 @@ export default function ProductsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [progress, setProgress] = useState<number>(0)
-
-  let categoryId = searchParams.get('categoryId') as QueryParams['categoryId']
   
-  // THIS IS MOCK DATA REMOVE IT DURING PRODUCTION
-  if (!categoryId) {
+  let categoryId = searchParams.get('categoryId') as QueryParams['categoryId']
+  const productsId: string[] | undefined = categoriesData.find((item) => item.id === categoryId)?.productsId
+
+  // checks if categoryId query is present in the url
+  if (!categoryId) { 
     categoryId = categoriesData[0].id
   }
-  const { productsId }: Category = categoriesData.find((item) => item.id === categoryId)!
+
+  // checks if the categoryId provided in the url actually exist in categoriesData
+  if (!productsId) {
+    notFound() // navigate to NotFound page
+  } 
+
+  // THIS IS MOCK DATA REMOVE IT DURING PRODUCTION
   
   const productList: Product[] = []
-  productsId.forEach((item) => {
+
+  productsId?.forEach((item) => {
     productList.push(popularProductsData.find((prod) => prod.productId === item)!)
   })
 

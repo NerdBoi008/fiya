@@ -9,7 +9,7 @@ import { categoriesData, popularProductsData } from '@/constants/mock-data'
 import { buildUrl } from '@/lib/utils'
 import { Product, QueryParams } from '@/types/index.types'
 import Image from 'next/image'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { notFound, useRouter, useSearchParams } from 'next/navigation'
 import React, { useState } from 'react'
 
 
@@ -20,12 +20,20 @@ export default function ProductDetailsPage() {
   const productId: string | undefined = (searchParams.get('productId') as QueryParams['productId']) ?
     (searchParams.get('productId') as QueryParams['productId']) :
     (searchParams.get('search') as QueryParams['search'])
+  
   const categoryId: string | undefined = searchParams.get('categoryId') as QueryParams['categoryId']
     
   const [progress, setProgress] = useState<number>(0)
   const router = useRouter()
   
-  const { productId: prodId , imgSrc, otherImgSrcSet, name, form, weight, actualPrice, offerPrice,  rating, ingredients, description, highlights, }: Product = popularProductsData.find((item) => item.productId === productId)!
+  const product: Product | undefined = popularProductsData.find((item) => item.productId === productId)
+
+  // checks if product is actually exist if not navigate to not found page
+  if (!product) {
+    notFound()
+  }
+
+  const { productId: prodId , imgSrc, otherImgSrcSet, name, form, weight, actualPrice, offerPrice,  rating, ingredients, description, highlights, }: Product = product
   
   const [mainImageSrc, setMainImageSrc] = useState<string>(imgSrc)
 
