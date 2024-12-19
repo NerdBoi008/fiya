@@ -33,9 +33,14 @@ export interface QueryParams {
     search?: string,
 }
 
-export type CartItem = {
+export declare type CartItem = {
     productId: string,
-    quantity: number,
+    productName: string,
+    imgSrc: string,
+    weight: number,
+    actualPrice: number,
+    offerPrice: number
+    quantity: number
 }
 
 export type Cart = {

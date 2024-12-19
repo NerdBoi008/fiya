@@ -4,7 +4,14 @@ import React, { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { LogOutIcon, User2Icon, } from 'lucide-react';
 import Image from 'next/image';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from './ui/dropdown-menu';
 import Link from 'next/link';
 import {
   Dialog,
@@ -39,9 +46,15 @@ const Navbar = () => {
   const [search, setSearch] = useState<{productName: string, productId: string}[]>()
   const router = useRouter()
 
+
   function onSubmit({ searchQuery }: { searchQuery: string }) {
     
-    setSearch(popularProductsData.filter((product) => product.name.includes(searchQuery)).map((item) => { return {productName: item.name, productId: item.productId} }))
+    // Searches product from products array
+    setSearch(popularProductsData.filter((product) => {
+      return product.name.includes(searchQuery)
+    }).map((item) => {
+      return { productName: item.name, productId: item.productId }
+    }))
     
     if (searchQuery === 'Enter') {
       setIsSearchDialogOpen(false)
@@ -80,15 +93,20 @@ const Navbar = () => {
               </DialogDescription>
             </DialogHeader>
             <div className='h-72 space-y-3'>
-              <Input onKeyDown={(event) => { onSubmit({ searchQuery: event.key }) }} placeholder="i.e. Dry fruits, Dehydrated oranges, ..." />
+              <Input
+                onKeyDown={(event) => {
+                  onSubmit({ searchQuery: event.key })
+                }}
+                placeholder="i.e. Dry fruits, Dehydrated oranges, ..."
+              />
               <ScrollArea className='h-full pb-10'>
                 {search?.map((product, index) => (
                   <div key={index} className='cursor-pointer'>
                     <p
                       className='mt-2'
                       onClick={() => {
-                      setIsSearchDialogOpen(false)
-                      router.push(buildUrl('/products/product-details', { search: product.productId }))
+                        setIsSearchDialogOpen(false)
+                        router.push(buildUrl('/products/product-details', { search: product.productId }))
                       }}
                     >{product.productName}</p>
                     <Separator />

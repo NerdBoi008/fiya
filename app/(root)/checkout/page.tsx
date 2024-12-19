@@ -1,58 +1,73 @@
 'use client'
 
-import CartItem from '@/components/CartItem'
 import CustomButton from '@/components/CustomButton'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { companyAddress, supportEmail } from '@/constants/index.constants'
-import { QueryParams } from '@/types/index.types'
-import { useSearchParams } from 'next/navigation'
-import React, { useState } from 'react'
+import { buildUrl } from '@/lib/utils'
+import { CartItem, QueryParams } from '@/types/index.types'
+import Image from 'next/image'
+import { useRouter, useSearchParams } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
+import { Progress } from '@/components/ui/progress'
+
 
 const CheckoutPage = () => {
   const searchParams = useSearchParams()
   const productId: string | undefined = searchParams.get('productId') as QueryParams['productId']
+  const router = useRouter()
 
-
-  const [subtotal, setSubtotal] = useState<number>(100)
+  const [subtotal, setSubtotal] = useState<number>(0)
+  const [progress, setProgress] = useState<number>(0)
 
   const shippingCharges: number = 123
 
   // Mock data remove this during production
-  const cartData = {
-    cartItems: [
-      { productId: 'P002', quantity: 2 },
-      { productId: 'P004', quantity: 2 },
-      { productId: 'P006', quantity: 2 },
-    ],
-  }
-
-  const cartProductDetails: { productName: string, imgSrc: string, weight: number, price: number, }[] = [
+  const cartProductDetails: CartItem[] = [
     {
-        "productName": "Dehydrated Spinach",
-        "imgSrc": "/useless/product-demo-img.webp",
-        "weight": 100,
-        "price": 85,
+      "productName": "Dehydrated Spinach",
+      "imgSrc": "/useless/product-demo-img.webp",
+      "weight": 100,
+      "actualPrice": 85,
+      "quantity": 0,
+      "productId": 'P001',
+      offerPrice: 110
     },
     {
-        "productName": "Dehydrated Potatoes",
-        "imgSrc": "/useless/product-demo-img.webp",
-        "weight": 250,
-        "price": 170,
+      "productName": "Dehydrated Potatoes",
+      "imgSrc": "/useless/product-demo-img.webp",
+      "weight": 250,
+      "actualPrice": 170,
+      "quantity": 2,
+      "productId": 'P002',
+      offerPrice: 320
     },
     {
-        "productName": "Dehydrated Onions",
-        "imgSrc": "/useless/product-demo-img.webp",
-        "weight": 200,
-        "price": 125,
+      "productName": "Dehydrated Onions",
+      "imgSrc": "/useless/product-demo-img.webp",
+      "weight": 200,
+      "actualPrice": 125,
+      "quantity": 5,
+      "productId": 'P003',
+      offerPrice: 130
     }
-]
+  ]
+  
+  useEffect(() => {
 
-  // setSubtotal(cartProductDetails.map((item) => item.price).reduce((accumulator, current) => accumulator + current))
+    setSubtotal(cartProductDetails.map((item) => item.offerPrice).reduce((accumulator, current) => accumulator + current))
+
+  }, [cartProductDetails])
+  
+
+  
 
   return (
     <main className='container-x-padding space-y-3'>
+
+      {/* New page loading progress */}
+      <Progress value={progress} className="fixed inset-0 z-50 w-full rounded-none h-1"/>
       
       {/* Breadcrumbs */}
       <div>
@@ -78,18 +93,68 @@ const CheckoutPage = () => {
 
             {/* Products List */}
             <div className='flex flex-col gap-3'>
-              {cartProductDetails.map((item, index) => (
-                <CartItem
-                  key={index}
-                  product={{
-                    imgSrc: item.imgSrc,
-                    name: 'Dehydrated Potatoes',
-                    weight: 100,
-                    actualPrice: 130,
-                    offerPrice: 100,
-                  }}
-                  quantity={0} />
-              ))}
+              {cartProductDetails.map((item) => {
+
+                const { imgSrc, productId, weight, actualPrice, offerPrice, quantity, productName } = item
+
+                  return (
+                    <div
+                      key={productId}
+                      className='border-2 p-3 rounded-md flex items-center max-sm:items-start  flex-col sm:flex-row justify-between gap-2 cursor-pointer'
+                      onClick={() => {
+                        setProgress(70)
+                        router.push(buildUrl('/products/product-details', { productId: productId}))
+                      }}
+                    >
+                        <div className='flex gap-3'>
+                            <Image
+                            src={imgSrc}
+                            alt={productName}
+                            height={100}
+                            width={100}
+                            />
+                            <div>
+                                <p className='text-xl '>{productName}</p>
+                                <p className='text-sm text-muted-foreground'>{weight}g</p>
+                                <div className="flex gap-2 items-center mt-3">
+                                    <p className="text-2xl">&#8377; {offerPrice}</p>
+                                    <div className="flex gap-1">
+                                        <p className="line-through text-muted-foreground">{actualPrice}</p>
+                                        <p className="text-green-600 font-medium">{((actualPrice-offerPrice) / actualPrice * 100).toPrecision(2)}% off</p>
+                                    </div>  
+                                </div>
+                            </div>
+                        </div>               
+                        <div className='flex flex-row gap-1 items-center'>
+                            <p className='text-muted-foreground'>Quantity:</p>
+                            <div className='flex gap-3 items-center '>
+                              <Image
+                                  src='/remove.svg'
+                                  alt='add icon'
+                                  className='size-5 border-[1px] border-primary rounded-sm cursor-pointer select-none'
+                                  height={12}
+                                  width={12}
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+
+                                  }}
+                              />
+                              <p className='text-xl'>{quantity}</p>
+                              <Image
+                                  src='/add.svg'
+                                  alt='add icon'
+                                  className='size-5 border-[1px] border-primary rounded-sm cursor-pointer select-none'
+                                  height={12}
+                                  width={12}
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+
+                                  }}
+                              />
+                            </div>
+                        </div>
+                  </div>
+                  )})}
             </div>
           </div>
 
@@ -138,17 +203,11 @@ const CheckoutPage = () => {
 
           <h1 className='text-xl font-medium'>Payment Details</h1>
           <Separator />
+            
+            
 
           <div>
-            <p>Cash on delivery</p>
-            <div className='flex items-center gap-2'>
-              <p>Pay online</p>
-              <p className='text-sm text-muted-foreground'>(with RazorPay)</p>
-            </div>
-            <div className='flex items-center gap-2'>
-              <p>Pay online</p>
-              <p className='text-sm text-muted-foreground'>(with CashFree)</p>
-            </div>
+
           </div>
 
           <Button

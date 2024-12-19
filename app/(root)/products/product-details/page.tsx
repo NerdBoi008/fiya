@@ -51,7 +51,7 @@ export default function ProductDetailsPage() {
                 <BreadcrumbLink href="/" >Home</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-              {(categoryId) ? (
+              {(categoryId) ? ( // shows product breadcrum if productId is present
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink href={buildUrl('/products', { categoryId: categoryId })}>Products</BreadcrumbLink>
