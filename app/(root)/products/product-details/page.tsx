@@ -99,7 +99,7 @@ export default function ProductDetailsPage() {
                 router.push(buildUrl('/checkout', { productId: prodId } ))
               }}
               variant={'active'}
-              label='Buy now'
+              label='Checkout'
             />
           </div>
         </div>

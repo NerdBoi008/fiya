@@ -50,7 +50,7 @@ const CustomButton = ({
           )}
 
         {label && (
-          <p className='select-none'>{label}</p>
+          <p className='select-none text-nowrap'>{label}</p>
         )}
 
         {trailingIcon && (

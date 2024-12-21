@@ -1,4 +1,4 @@
-import { Category, Product } from "@/types/index.types";
+import { CartItem, Category, Product } from "@/types/index.types";
 
 export const popularProductsData: Product[] = [
   {
@@ -199,3 +199,33 @@ export const categoriesData: Category[] = [
     productsId: ["P002", "P006", "P008", "P009"],
   },
 ];
+
+export const cartProductDetails: CartItem[] = [
+  {
+    "productName": "Dehydrated Spinach",
+    "imgSrc": "/useless/product-demo-img.webp",
+    "weight": 100,
+    "actualPrice": 100,
+    "quantity": 1,
+    "productId": 'P001',
+    offerPrice: 70
+  },
+  {
+    "productName": "Dehydrated Potatoes",
+    "imgSrc": "/useless/product-demo-img.webp",
+    "weight": 250,
+    "actualPrice": 100,
+    "quantity": 2,
+    "productId": 'P002',
+    offerPrice: 70
+  },
+  {
+    "productName": "Dehydrated Onions",
+    "imgSrc": "/useless/product-demo-img.webp",
+    "weight": 200,
+    "actualPrice": 100,
+    "quantity": 5,
+    "productId": 'P003',
+    offerPrice: 70
+  }
+]

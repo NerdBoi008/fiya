@@ -6,62 +6,39 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { companyAddress, supportEmail } from '@/constants/index.constants'
 import { buildUrl } from '@/lib/utils'
-import { CartItem, QueryParams } from '@/types/index.types'
 import Image from 'next/image'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
-
+import { cartProductDetails } from '@/constants/mock-data'
 
 const CheckoutPage = () => {
-  const searchParams = useSearchParams()
-  const productId: string | undefined = searchParams.get('productId') as QueryParams['productId']
+  
   const router = useRouter()
 
-  const [subtotal, setSubtotal] = useState<number>(0)
+  const [subTotal, setSubTotal] = useState<number>(0)
+  const [discountTotal, setDiscountTotal] = useState<number>(0)
+  const [grandTotal, setGrandTotal] = useState<number>(0)
   const [progress, setProgress] = useState<number>(0)
 
   const shippingCharges: number = 123
-
-  // Mock data remove this during production
-  const cartProductDetails: CartItem[] = [
-    {
-      "productName": "Dehydrated Spinach",
-      "imgSrc": "/useless/product-demo-img.webp",
-      "weight": 100,
-      "actualPrice": 85,
-      "quantity": 0,
-      "productId": 'P001',
-      offerPrice: 110
-    },
-    {
-      "productName": "Dehydrated Potatoes",
-      "imgSrc": "/useless/product-demo-img.webp",
-      "weight": 250,
-      "actualPrice": 170,
-      "quantity": 2,
-      "productId": 'P002',
-      offerPrice: 320
-    },
-    {
-      "productName": "Dehydrated Onions",
-      "imgSrc": "/useless/product-demo-img.webp",
-      "weight": 200,
-      "actualPrice": 125,
-      "quantity": 5,
-      "productId": 'P003',
-      offerPrice: 130
-    }
-  ]
   
   useEffect(() => {
-
-    setSubtotal(cartProductDetails.map((item) => item.offerPrice).reduce((accumulator, current) => accumulator + current))
-
-  }, [cartProductDetails])
+    const subTotal = cartProductDetails
+      .map((item) => item.actualPrice * item.quantity)
+      .reduce((accumulator, current) => accumulator + current, 0);
   
-
+    const discountTotal = cartProductDetails
+      .map((item) => (item.actualPrice - item.offerPrice) * item.quantity)
+      .reduce((accumulator, current) => accumulator + current, 0);
   
+    const grandTotal = subTotal - discountTotal + shippingCharges;
+  
+    // Update state for all totals
+    setSubTotal(subTotal);
+    setDiscountTotal(discountTotal);
+    setGrandTotal(grandTotal);
+  }, [shippingCharges]);
 
   return (
     <main className='container-x-padding space-y-3'>
@@ -97,63 +74,77 @@ const CheckoutPage = () => {
 
                 const { imgSrc, productId, weight, actualPrice, offerPrice, quantity, productName } = item
 
-                  return (
-                    <div
-                      key={productId}
-                      className='border-2 p-3 rounded-md flex items-center max-sm:items-start  flex-col sm:flex-row justify-between gap-2 cursor-pointer'
-                      onClick={() => {
-                        setProgress(70)
-                        router.push(buildUrl('/products/product-details', { productId: productId}))
-                      }}
-                    >
-                        <div className='flex gap-3'>
-                            <Image
-                            src={imgSrc}
-                            alt={productName}
-                            height={100}
-                            width={100}
-                            />
-                            <div>
-                                <p className='text-xl '>{productName}</p>
-                                <p className='text-sm text-muted-foreground'>{weight}g</p>
-                                <div className="flex gap-2 items-center mt-3">
-                                    <p className="text-2xl">&#8377; {offerPrice}</p>
-                                    <div className="flex gap-1">
-                                        <p className="line-through text-muted-foreground">{actualPrice}</p>
-                                        <p className="text-green-600 font-medium">{((actualPrice-offerPrice) / actualPrice * 100).toPrecision(2)}% off</p>
-                                    </div>  
+                return (
+                    <div key={productId} className='flex'>
+                        <div
+                          className='flex-1 border-2 p-3 rounded-l-md flex items-center max-sm:items-start  flex-col sm:flex-row justify-between gap-2 cursor-pointer'
+                          onClick={() => {
+                            setProgress(70)
+                            router.push(buildUrl('/products/product-details', { productId: productId}))
+                          }}
+                        >
+                            <div className='flex gap-3'>
+                                <Image
+                                src={imgSrc}
+                                alt={productName}
+                                height={100}
+                                width={100}
+                                />
+                                <div>
+                                    <p className='text-xl '>{productName}</p>
+                                    <p className='text-sm text-muted-foreground'>{weight}g</p>
+                                    <div className="flex gap-2 items-center mt-3">
+                                        <p className="text-2xl">&#8377; {offerPrice}</p>
+                                        <div className="flex gap-1">
+                                            <p className="line-through text-muted-foreground">{actualPrice}</p>
+                                            <p className="text-green-600 font-medium">{((actualPrice-offerPrice) / actualPrice * 100).toPrecision(2)}% off</p>
+                                        </div>  
+                                    </div>
                                 </div>
-                            </div>
-                        </div>               
-                        <div className='flex flex-row gap-1 items-center'>
-                            <p className='text-muted-foreground'>Quantity:</p>
-                            <div className='flex gap-3 items-center '>
-                              <Image
-                                  src='/remove.svg'
-                                  alt='add icon'
-                                  className='size-5 border-[1px] border-primary rounded-sm cursor-pointer select-none'
-                                  height={12}
-                                  width={12}
-                                  onClick={(event) => {
-                                    event.stopPropagation()
+                            </div>               
+                            <div className='flex flex-row gap-1 items-center'>
+                                <p className='text-muted-foreground'>Quantity:</p>
+                                <div className='flex gap-3 items-center '>
+                                  <Image
+                                      src='/remove.svg'
+                                      alt='add icon'
+                                      className='size-5 border-[1px] border-primary rounded-sm cursor-pointer select-none'
+                                      height={12}
+                                      width={12}
+                                      onClick={(event) => {
+                                        event.stopPropagation()
 
-                                  }}
-                              />
-                              <p className='text-xl'>{quantity}</p>
-                              <Image
-                                  src='/add.svg'
-                                  alt='add icon'
-                                  className='size-5 border-[1px] border-primary rounded-sm cursor-pointer select-none'
-                                  height={12}
-                                  width={12}
-                                  onClick={(event) => {
-                                    event.stopPropagation()
+                                      }}
+                                  />
+                                  <p className='text-xl'>{quantity}</p>
+                                  <Image
+                                      src='/add.svg'
+                                      alt='add icon'
+                                      className='size-5 border-[1px] border-primary rounded-sm cursor-pointer select-none'
+                                      height={12}
+                                      width={12}
+                                      onClick={(event) => {
+                                        event.stopPropagation()
 
-                                  }}
-                              />
+                                      }}
+                                  />
                             </div>
+                          </div>
+                          
+                      </div>
+                    <div
+                      onClick={() => {
+
+                      }}
+                      className='flex select-none items-center px-2 rounded-r-md bg-slate-200 cursor-pointer'>
+                          <Image
+                            src='/delete.svg'
+                            height={24}
+                            width={24}
+                            alt='delete icon'
+                          />
                         </div>
-                  </div>
+                    </div>
                   )})}
             </div>
           </div>
@@ -179,36 +170,37 @@ const CheckoutPage = () => {
         </div>
 
         {/* Order Summery */}
-        <aside className="border-2 rounded-md p-4 lg:min-w-96 space-y-3">
+        <aside className="border-2 h-fit rounded-md p-4 lg:min-w-96 space-y-3">
           <h1 className='text-xl font-medium'>Order Summery</h1>
           <Separator />
           
           <div className='flex justify-between px-3'>
             <p className='text-sm text-muted-foreground'>Subtotal</p>
-            <p className='text-sm text-muted-foreground'>{subtotal}</p>
+            <p className='text-sm text-muted-foreground'>{subTotal}</p>
           </div>
 
           <div className='flex justify-between px-3'>
             <p className='text-sm text-muted-foreground'>Shipping charges</p>
             <p className='text-sm text-muted-foreground'>{shippingCharges}</p>
           </div>
+
+          <div className='flex justify-between px-3'>
+            <p className='text-sm text-muted-foreground'>Total Discount</p>
+            <p className='text-sm text-muted-foreground'>- {discountTotal}</p>
+          </div>
           
           <Separator />
-          <div className='flex justify-between px-3'>
-            <p className='font-medium'>Total</p>
-            <p className='font-medium'>
-              {shippingCharges + subtotal}
-            </p>
-          </div>
-
-          <h1 className='text-xl font-medium'>Payment Details</h1>
-          <Separator />
-            
-            
 
           <div>
-
+            <div className='flex justify-between px-3'>
+              <p className='font-medium text-sm'>Grand Total</p>
+              <p className='font-medium text-sm'>
+                {grandTotal}
+              </p>
+            </div>
           </div>
+
+          <Separator />
 
           <Button
             onClick={() => {
@@ -216,8 +208,11 @@ const CheckoutPage = () => {
             }}
             className='w-full'
           >
-            Pay &#8377; {shippingCharges + subtotal}
+            Pay &#8377; {grandTotal}
           </Button>
+
+          <p className='text-sm text-muted-foreground'>* After clicking the button you&apos;ll be redirected to our payment gateway page to procced with payment process.</p>
+          
         </aside>
       </section>
     </main>

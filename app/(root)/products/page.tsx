@@ -110,12 +110,16 @@ export default function ProductsPage() {
                   />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuLabel>Results</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Billing</DropdownMenuItem>
-                  <DropdownMenuItem>Team</DropdownMenuItem>
-                  <DropdownMenuItem>Subscription</DropdownMenuItem>
+                  <DropdownMenuLabel>Categories</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                  {categoriesData.map((category) => (
+                    <DropdownMenuItem
+                      key={category.id}
+                      onClick={() => {
+                        router.push(buildUrl('/products', { categoryId: category.id }))
+                      }}
+                    >{category.categoryName}</DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
           </div>

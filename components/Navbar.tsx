@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { LogOutIcon, User2Icon, } from 'lucide-react';
 import Image from 'next/image';
@@ -21,24 +21,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
-import { popularProductsData } from '@/constants/mock-data';
+import { cartProductDetails, popularProductsData } from '@/constants/mock-data';
 import { useRouter } from 'next/navigation';
 import { buildUrl } from '@/lib/utils';
 import CustomButton from './CustomButton';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-
 
 const Navbar = () => {
 
@@ -46,6 +35,14 @@ const Navbar = () => {
   const [search, setSearch] = useState<{productName: string, productId: string}[]>()
   const router = useRouter()
 
+  const [cartItemsCount, setCartItemsCount] = useState<number>(0)
+
+
+  useEffect(() => {
+    setCartItemsCount(cartProductDetails.length)
+    
+  }, [cartItemsCount])
+  
 
   function onSubmit({ searchQuery }: { searchQuery: string }) {
     
@@ -118,32 +115,23 @@ const Navbar = () => {
         </Dialog>
         
         {/* Cart Button */}
-        <Drawer>
-          <DrawerTrigger asChild>
+        <div className='relative'>
           <CustomButton
               leadingIcon='/cart.svg'
-              onClick={() => {
-                
-               }}
+            onClick={() => {
+                router.push('/checkout')
+              }}
               variant={'outline'}
               classNames='border-none'
-            />
-          </DrawerTrigger>
-          <DrawerContent>
-            <div className='container-x-padding'>
-              <DrawerHeader className='p-0'>
-                <DrawerTitle>Cart</DrawerTitle>
-                <DrawerDescription>Your all products are stored in cart</DrawerDescription>
-              </DrawerHeader>
-              <p>this is test</p>
-            </div>
-            <DrawerFooter>
-              <DrawerClose>
-                <p>Close</p>
-              </DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+          />
+            {(cartItemsCount >= 1) && (
+              <div className='absolute -right-1 -top-2 bg-red-700 p-1 rounded-full'>
+                {(cartItemsCount <= 9) ?
+                (<p className='text-white text-sm leading-none'>{cartItemsCount}</p>) :
+                (<p className='text-white leading-none'>9+</p>)} 
+              </div>
+            )}
+        </div>
         
         {/* Avatar button */}
         <DropdownMenu>
@@ -167,12 +155,19 @@ const Navbar = () => {
           <DropdownMenuContent>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                router.push('/profile')
+              }}
+              className='cursor-pointer'
+              >
               <User2Icon/>
               Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              className='cursor-pointer'
+            >
               <LogOutIcon/>
               Log out
             </DropdownMenuItem>
