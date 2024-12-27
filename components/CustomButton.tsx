@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import React from 'react'
 
 interface CustomButtonProps {
@@ -37,7 +38,9 @@ const CustomButton = ({
   }
 
     return (
-      <div onClick={onClick} className={`flex justify-center gap-2 rounded-sm items-center w-fit cursor-pointer px-2 py-1 h-9 font-medium ${buttonStyle} ${classNames}`}>
+      <div
+        onClick={onClick}
+        className={cn('flex justify-center gap-2 rounded-sm items-center w-fit cursor-pointer px-2 py-1 h-9 font-medium', buttonStyle, classNames)}>
         {leadingIcon && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -45,12 +48,12 @@ const CustomButton = ({
             height={20}
             width={20}
             alt={`${label} button`}
-            className={`size-5 ${(variant === 'outline') ? '' : 'svg-stroke-white'}`}
+            className={`size-[18px] ${(variant === 'outline') ? '' : 'svg-stroke-white'}`}
           />
           )}
 
         {label && (
-          <p className='select-none text-nowrap'>{label}</p>
+          <p className='select-none text-nowrap text-sm'>{label}</p>
         )}
 
         {trailingIcon && (
@@ -60,7 +63,7 @@ const CustomButton = ({
             height={20}
             width={20}
             alt={`${label} button`}
-            className='size-5'
+            className='size-[18px]'
           />
         )}
       </div>  

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -14,18 +14,39 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import Link from 'next/link'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
+import CustomInput from '@/components/CustomInput'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { InfoIcon, LoaderCircleIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { signIn } from '@/lib/appwrite/server/user.actions'
+
 
 const formSchema = z.object({
-  email: z.string().email('Please enter valid email'),
-  password: z.string().min(8, 'Must be atleast 8 characters long'),
-  rememberMe: z.boolean().default(false).optional(),
+  email: z.string().email('Please enter valid email').trim(),
+  password: z
+  .string()
+  .min(8, { message: 'Be at least 8 characters long' })
+  .regex(/[a-zA-Z]/, { message: 'Contain at least one letter.' })
+  .regex(/[0-9]/, { message: 'Contain at least one number.' })
+  .regex(/[^a-zA-Z0-9]/, {
+    message: 'Contain at least one special character.',
+  })
+  .trim(),
+  rememberMe: z.boolean().default(false),
 })
 
+
+
 const SignInPage = () => {
+
+  const router = useRouter()
+  
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [passwordInputProps, setPasswordInputProps] = useState<{type: 'password' | 'text', trailingIconSrc: string}>({trailingIconSrc: '/visibility.svg', type: 'password'});
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -34,14 +55,29 @@ const SignInPage = () => {
       password: "",
       rememberMe: false,
     },
-  })
+  });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values)
+  async function onSubmit({ email, password, rememberMe }: z.infer<typeof formSchema>) {
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      
+      const isSignedIn = await signIn(email, password, rememberMe);
+
+      if (isSignedIn) {
+        router.push('/');
+      }
+     
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+      
   }
-
+  
   return (
     <aside className='min-w-[500px] min-h-fit flex flex-col justify-center p-10 gap-2 overflow-y-auto remove-scrollbar'>
         <Link href="/">
@@ -64,7 +100,15 @@ const SignInPage = () => {
           <Separator className='w-24'/>
           <p className='text-center text-muted-foreground text-sm w-fit'>or sign in with email</p>
           <Separator className='w-24'/>
-        </div>
+      </div>
+      
+      {error && (
+        <Alert variant={'destructive'}>
+          <InfoIcon />
+          <AlertTitle className='hidden'>Error!</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 flex flex-col">
@@ -75,20 +119,44 @@ const SignInPage = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="example@email.com" {...field} className='border-2'/>
+                  <CustomInput
+                      field={field}
+                      leadingIconSrc='/mail.svg'
+                      type='text'
+                      placeholder="example@email.com"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
+          
+          <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type='password' placeholder="m33^dg%$" {...field} className='border-2'/>
+                    <CustomInput
+                      field={field}
+                      leadingIconSrc='/password.svg'
+                      type={passwordInputProps.type}
+                      placeholder="m33^dg%$"
+                      trailingIconSrc={passwordInputProps?.trailingIconSrc}
+                      trailingAction={() => {
+                        setPasswordInputProps(
+                          (passwordInputProps.type === 'password') ?
+                            {
+                              trailingIconSrc: '/visibility_off.svg',
+                              type: 'text'
+                            } : {
+                              trailingIconSrc: '/visibility.svg',
+                              type: 'password'
+                            }
+                        )
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,10 +185,19 @@ const SignInPage = () => {
               
               <Link href='#' className='underline text-primary self-end'>Forgot password?</Link>
             </div>
-            <Button type="submit" className='w-full text-white '>Sign in</Button>
+          <Button type="submit" className='w-full text-white ' disabled={loading}>
+            {loading ? (
+              <div className='flex gap-3'>
+                <LoaderCircleIcon className='animate-spin'/>
+                <p>Siging in...</p>
+              </div>
+            ): (
+                <p>Sing in</p>
+            )}
+            </Button>
           </form>
         </Form>
-        <p className='self-center mt-10'>Dont have account? <Link href='/sign-up' className='text-secondary underline'>Create an account</Link></p>
+        <p className='self-center mt-10'>Don&apos;t have account? <Link href='/sign-up' className='text-secondary underline'>Create an account</Link></p>
       </aside>
   )
 }

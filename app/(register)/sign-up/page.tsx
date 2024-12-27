@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -14,30 +14,50 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import Link from 'next/link'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
+import { useRouter } from 'next/navigation'
+import CustomInput from '@/components/CustomInput'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { InfoIcon, LoaderCircleIcon } from 'lucide-react'
+import { signUpWithEmail } from '@/lib/appwrite/server/user.actions'
+
 
 const formSchema = z.object({
-  firstName: z.string().min(3,'must be longer than 3 characters').max(20),
-  lastName: z.string().min(3,'must be longer than 3 characters').max(20),
-  email: z.string().email('Please enter valid email'),
-  password: z.string().min(8, 'Must be atleast 8 characters long'),
+  firstName: z.string().min(3,'must be longer than 3 characters').max(20).trim(),
+  lastName: z.string().min(3,'must be longer than 3 characters').max(20).trim(),
+  email: z.string().email('Please enter valid email').trim(),
+  password: z
+  .string()
+  .min(8, { message: 'Be at least 8 characters long' })
+  .regex(/[a-zA-Z]/, { message: 'Contain at least one letter.' })
+  .regex(/[0-9]/, { message: 'Contain at least one number.' })
+  .regex(/[^a-zA-Z0-9]/, {
+    message: 'Contain at least one special character.',
+  })
+  .trim(),
   confirmPassword: z.string(),
   phone: z
     .string()
     .regex(/^\+?[0-9\s-]{10,15}$/, "Invalid phone number format"),
-  receiveUpdates: z.boolean().default(false).optional(),
+  receiveUpdates: z.boolean().default(false),
+  rememberMe: z.boolean().default(false),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
   message: 'Passwords must match',
 })
 
 const SignUpPage = () => {
+
+  const router = useRouter()
+  const [passwordInputProps, setPasswordInputProps] = useState<{type: 'password' | 'text', trailingIconSrc: string}>({trailingIconSrc: '/visibility.svg', type: 'password'});
   
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,13 +68,29 @@ const SignUpPage = () => {
       confirmPassword: "",
       phone: "",
       receiveUpdates: false,
+      rememberMe: false,
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values)
+  async function onSubmit({ firstName, lastName, email, password, phone, receiveUpdates, rememberMe}: z.infer<typeof formSchema>) {
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      
+      const response = await signUpWithEmail(firstName, lastName, email, password, phone, receiveUpdates, rememberMe)
+
+      if (response) {
+        router.push('/')
+      }
+      
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+
   }
 
   return (
@@ -78,7 +114,15 @@ const SignUpPage = () => {
           <Separator className='w-24'/>
           <p className='text-center text-muted-foreground text-sm'>or sing up with email</p>
           <Separator className='w-24'/>
-        </div>
+      </div>
+      
+        {error && (
+          <Alert variant={'destructive'}>
+            <InfoIcon />
+            <AlertTitle className='hidden'>Error!</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 flex flex-col">
@@ -91,7 +135,12 @@ const SignUpPage = () => {
                 <FormItem className='w-full'>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" {...field} className='border-2'/>
+                  <CustomInput
+                      field={field}
+                      leadingIconSrc='/person.svg'
+                      type='text'
+                      placeholder="Joe"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -104,7 +153,12 @@ const SignUpPage = () => {
                 <FormItem className='w-full'>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Doe" {...field} className='border-2'/>
+                  <CustomInput
+                      field={field}
+                      leadingIconSrc='/person.svg'
+                      type='text'
+                      placeholder="Doe"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -119,7 +173,12 @@ const SignUpPage = () => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="example@email.com" {...field} className='border-2'/>
+                    <CustomInput
+                      field={field}
+                      leadingIconSrc='/mail.svg'
+                      type='text'
+                      placeholder="example@email.com"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,7 +193,25 @@ const SignUpPage = () => {
                 <FormItem className='w-full'>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type='password' placeholder="m33^dg%$" {...field} className='border-2'/>
+                  <CustomInput
+                      field={field}
+                      leadingIconSrc='/password.svg'
+                      type={passwordInputProps.type}
+                      placeholder="m33^dg%$"
+                      trailingIconSrc={passwordInputProps?.trailingIconSrc}
+                      trailingAction={() => {
+                        setPasswordInputProps(
+                          (passwordInputProps.type === 'password') ?
+                            {
+                              trailingIconSrc: '/visibility_off.svg',
+                              type: 'text'
+                            } : {
+                              trailingIconSrc: '/visibility.svg',
+                              type: 'password'
+                            }
+                        )
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,7 +224,25 @@ const SignUpPage = () => {
                 <FormItem className='w-full'>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type='password' placeholder="m33^dg%$" {...field} className='border-2'/>
+                  <CustomInput
+                      field={field}
+                      leadingIconSrc='/password.svg'
+                      type={passwordInputProps.type}
+                      placeholder="m33^dg%$"
+                      trailingIconSrc={passwordInputProps?.trailingIconSrc}
+                      trailingAction={() => {
+                        setPasswordInputProps(
+                          (passwordInputProps.type === 'password') ?
+                            {
+                              trailingIconSrc: '/visibility_off.svg',
+                              type: 'text'
+                            } : {
+                              trailingIconSrc: '/visibility.svg',
+                              type: 'password'
+                            }
+                        )
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -196,8 +291,36 @@ const SignUpPage = () => {
                     </FormItem>
                   )}
               />
-            
-            <Button type="submit" className='w-full text-white '>Sign in</Button>
+
+              <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className='flex items-center gap-2'>
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className='mt-[4px]'
+                        />
+                      </FormControl>
+                        <FormLabel className='cursor-pointer'>
+                        Remeber me
+                        </FormLabel>
+                    </FormItem>
+                  )}
+              />
+          
+          <Button type="submit" className='w-full text-white ' disabled={loading}>
+            {loading ? (
+              <div className='flex gap-3'>
+                <LoaderCircleIcon className='animate-spin'/>
+                <p>Siging Up...</p>
+              </div>
+            ): (
+                <p>Sing Up</p>
+            )}
+            </Button>
           </form>
         </Form>
         <p className='self-center mt-10'>Already have an account? <Link href='/sign-in' className='text-secondary underline'>Sign in</Link></p>

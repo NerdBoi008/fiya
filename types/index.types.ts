@@ -1,8 +1,16 @@
 export declare type User = {
-    $id: string,
+    id: string,
     firstName: string,
     lastName: string,
     email: string,
+    cart: CartItem[],
+    phone: string,
+    receiveUpdates: boolean,
+    profileImgSrc: string,
+} | null;
+
+export declare type UserPreferences = {
+    receiveUpdates: boolean,
 }
 
 export declare type Product = {

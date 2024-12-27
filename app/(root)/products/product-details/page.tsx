@@ -2,6 +2,7 @@
 
 import CustomButton from '@/components/CustomButton'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
+import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
@@ -92,15 +93,15 @@ export default function ProductDetailsPage() {
               leadingIcon='/add-cart.svg'
               label='Add to cart'
               classNames='flex-1'
-              />
-            <CustomButton
+            />
+            <Button
               onClick={function (): void {
                 setProgress(77)
                 router.push(buildUrl('/checkout', { productId: prodId } ))
               }}
-              variant={'active'}
-              label='Checkout'
-            />
+            >
+              Checkout
+            </Button>
           </div>
         </div>
 

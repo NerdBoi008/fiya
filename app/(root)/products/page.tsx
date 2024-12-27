@@ -28,7 +28,7 @@ import { useState } from "react"
 
 export default function ProductsPage() {
   
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
   const router = useRouter()
   const [progress, setProgress] = useState<number>(0)
   

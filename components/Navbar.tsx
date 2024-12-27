@@ -28,6 +28,9 @@ import { buildUrl } from '@/lib/utils';
 import CustomButton from './CustomButton';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
+import { User } from '@/types/index.types';
+import { Button } from './ui/button';
+import { getSignedInUser, signOut } from '@/lib/appwrite/server/user.actions';
 
 const Navbar = () => {
 
@@ -36,12 +39,25 @@ const Navbar = () => {
   const router = useRouter()
 
   const [cartItemsCount, setCartItemsCount] = useState<number>(0)
+  const [signedInUser, setSignedInUser] = useState<User | null>(null)
 
 
   useEffect(() => {
+    const fetchUser = async () => {
+      const signedInUser = await getSignedInUser();
+      setSignedInUser(signedInUser)
+    };
+
+    fetchUser();
+
     setCartItemsCount(cartProductDetails.length)
     
+  }, [])
+
+  useEffect(() => {
+    setCartItemsCount(cartProductDetails.length)
   }, [cartItemsCount])
+  
   
 
   function onSubmit({ searchQuery }: { searchQuery: string }) {
@@ -58,14 +74,26 @@ const Navbar = () => {
     }
   }
 
+  const handleSignOut = async () => {
+    try {
+      const isSignedOut = await signOut();
+      if (isSignedOut) {
+        setSignedInUser(null) 
+      }
+    } catch (error) {
+      console.error('Sign-out failed:', (error instanceof Error ? error.message : 'An unknown error occurred'));
+      alert('Failed to sign out. Please try again.');
+    }
+  };
+
   return (
     <nav className='sticky top-0 z-50 bg-white h-16 flex items-center justify-between container-x-padding'>
 
       <Link href="/">
         <Image
             src='/assets/logo.svg'
-            height={34}
-            width={100}
+            height={80}
+            width={80}
             alt='logo'
         />
       </Link>
@@ -133,46 +161,56 @@ const Navbar = () => {
             )}
         </div>
         
-        {/* Avatar button */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className='cursor-pointer group' asChild>
-            <div className='flex flex-row items-center' >
-              <Avatar >
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <span className='mx-1 group-hover:translate-y-0.5 transition-all'>
-              <Image
-                src='/arrow-down.svg'
-                height={12}
-                width={12}
-                  alt='logo'
-                />
-            </span>
-            </div>
-            
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                router.push('/profile')
-              }}
-              className='cursor-pointer'
+        {(signedInUser) ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger className='cursor-pointer group' asChild>
+              <div className='flex flex-row items-center' >
+                <Avatar >
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+              <span className='mx-1 group-hover:translate-y-0.5 transition-all'>
+                <Image
+                  src='/arrow-down.svg'
+                  height={12}
+                  width={12}
+                    alt='logo'
+                  />
+              </span>
+              </div>
+              
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push('/profile')
+                }}
+                className='cursor-pointer'
+                >
+                <User2Icon/>
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className='cursor-pointer'
+                onClick={handleSignOut}
               >
-              <User2Icon/>
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className='cursor-pointer'
+                <LogOutIcon/>
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent> 
+        </DropdownMenu>
+        ) : (
+            <Button
+              onClick={() => {
+                router.push('/sign-in')
+              }}
             >
-              <LogOutIcon/>
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent> 
-      </DropdownMenu>
+              Sing in
+            </Button>
+        )}
       </div>
     </nav>
   )
