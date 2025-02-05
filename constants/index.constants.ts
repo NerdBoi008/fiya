@@ -12,7 +12,7 @@ export const footerLinks = [ // Footer Links & heading
     {
         heading: 'About',
         links: [
-            { linkName: 'About Us', href: '/about-us' },
+            { linkName: 'About Us', href: '#' },
             { linkName: 'Contact', href: '#' },
             { linkName: 'Support', href: '#' },
         ]
@@ -50,6 +50,5 @@ export const policyLinks = [ // Policy Links
     {
         name: 'Cookie policy',
         link: '#',
-    },
-    
+    }    
 ]

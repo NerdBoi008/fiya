@@ -79,7 +79,7 @@ const SignInPage = () => {
   }
   
   return (
-    <aside className='min-w-[500px] min-h-fit flex flex-col justify-center p-10 gap-2 overflow-y-auto remove-scrollbar'>
+    <aside className='md:min-w-[500px] min-h-fit flex flex-col justify-center p-5 gap-2 overflow-y-auto remove-scrollbar'>
         <Link href="/">
           <Image
               src='/assets/logo.svg'

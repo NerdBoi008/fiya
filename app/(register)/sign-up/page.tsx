@@ -94,7 +94,7 @@ const SignUpPage = () => {
   }
 
   return (
-    <aside className='min-w-[500px] max-w-[500px] min-h-fit flex flex-col justify-center p-10 gap-2 '>
+    <aside className='max-w-[500px] min-h-fit flex flex-col justify-center p-5 gap-2 '>
         <Link href="/">
           <Image
               src='/assets/logo.svg'
