@@ -21,7 +21,7 @@ import CustomInput from '@/components/CustomInput'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { InfoIcon, LoaderCircleIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { signIn } from '@/lib/appwrite/server/user.actions'
+import { signInWithCognito } from '@/lib/aws/cognito'
 
 
 const formSchema = z.object({
@@ -64,7 +64,7 @@ const SignInPage = () => {
 
     try {
       
-      const isSignedIn = await signIn(email, password, rememberMe);
+      const isSignedIn = await signInWithCognito(email, password, rememberMe);
 
       if (isSignedIn) {
         router.push('/');

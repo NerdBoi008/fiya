@@ -20,7 +20,7 @@ const ProfilePage = () => {
   }, [])
 
   return (
-    <main className='container-x-padding space-y-3'>
+    <main className='container-x-padding space-y-3 flex-1'>
       {signedInUser?.firstName}
     </main>
   )

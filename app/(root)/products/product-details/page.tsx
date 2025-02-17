@@ -39,7 +39,7 @@ export default function ProductDetailsPage() {
   const [mainImageSrc, setMainImageSrc] = useState<string>(imgSrc)
 
     return (
-      <main className='container-x-padding space-y-3 w-full'>
+      <main className='container-x-padding space-y-3 w-full flex-1'>
 
         {/* New page loading progress */}
         <Progress value={progress} className="fixed inset-0 z-50 w-full rounded-none h-1"/>

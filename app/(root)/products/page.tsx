@@ -54,7 +54,7 @@ export default function ProductsPage() {
   })
 
   return (
-    <main className="container-x-padding space-y-3">
+    <main className="container-x-padding space-y-3 flex-1">
 
       <Progress value={progress} className="fixed inset-0 z-50 w-full rounded-none h-1" />
       
@@ -125,7 +125,7 @@ export default function ProductsPage() {
           </div>
 
           {/* All products grid */}
-          <div className="grid max-md:grid-cols-2 max-xl:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5  w-full gap-4">
+          <div className="grid max-md:grid-cols-2 max-xl:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5  w-full max-sm:gap-2 gap-4">
             {productList.map(({ productId, weight, actualPrice, offerPrice, imgSrc, name, form, rating }: Product, index) => {
               return (
               <div

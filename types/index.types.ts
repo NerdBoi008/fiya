@@ -7,6 +7,7 @@ export declare type User = {
     phone: string,
     receiveUpdates: boolean,
     profileImgSrc: string,
+    address: string,
 } | null;
 
 export declare type UserPreferences = {

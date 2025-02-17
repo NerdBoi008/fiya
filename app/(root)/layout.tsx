@@ -8,7 +8,7 @@ export default function MainLayout({
   }) {
   
     return (
-      <section className="flex gap-3 flex-col min-h-screen">
+      <section className="flex flex-col min-h-screen">
         <Navbar />
         {children}
         <Footer />

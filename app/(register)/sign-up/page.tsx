@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation'
 import CustomInput from '@/components/CustomInput'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { InfoIcon, LoaderCircleIcon } from 'lucide-react'
-import { signUpWithEmail } from '@/lib/appwrite/server/user.actions'
+import { signUpWithCognito } from '@/lib/aws/cognito'
 
 
 const formSchema = z.object({
@@ -45,6 +45,7 @@ const formSchema = z.object({
     .regex(/^\+?[0-9\s-]{10,15}$/, "Invalid phone number format"),
   receiveUpdates: z.boolean().default(false),
   rememberMe: z.boolean().default(false),
+  address: z.string().min(5).max(150).trim(),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
   message: 'Passwords must match',
@@ -69,17 +70,18 @@ const SignUpPage = () => {
       phone: "",
       receiveUpdates: false,
       rememberMe: false,
+      address: '',
     },
   })
 
-  async function onSubmit({ firstName, lastName, email, password, phone, receiveUpdates, rememberMe}: z.infer<typeof formSchema>) {
+  async function onSubmit({ firstName, lastName, email, password, phone, receiveUpdates, rememberMe, address}: z.infer<typeof formSchema>) {
 
     setLoading(true);
     setError(null);
 
     try {
       
-      const response = await signUpWithEmail(firstName, lastName, email, password, phone, receiveUpdates, rememberMe)
+      const response = await signUpWithCognito(firstName, lastName, email, password, phone, receiveUpdates, rememberMe, address);
 
       if (response) {
         router.push('/')
@@ -255,7 +257,7 @@ const SignUpPage = () => {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>phone</FormLabel>
+                  <FormLabel>Phone</FormLabel>
                   <FormControl>
                     <PhoneInput
                       country='in'
@@ -271,7 +273,27 @@ const SignUpPage = () => {
                   <FormMessage />
                 </FormItem>
               )}
+              
           />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem className='w-full'>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <CustomInput
+                        field={field}
+                        leadingIconSrc='/location--person.svg'
+                        type='text'
+                        placeholder="Mumbai street 1, Maharastra, India"
+                      />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
               <FormField
                   control={form.control}
@@ -292,34 +314,35 @@ const SignUpPage = () => {
                   )}
               />
 
-              <FormField
-                  control={form.control}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className='flex items-center gap-2'>
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className='mt-[4px]'
-                        />
-                      </FormControl>
-                        <FormLabel className='cursor-pointer'>
-                        Remeber me
-                        </FormLabel>
-                    </FormItem>
-                  )}
-              />
+            <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className='flex items-center gap-2'>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className='mt-[4px]'
+                      />
+                    </FormControl>
+                     <FormLabel className='cursor-pointer'>
+                      Remeber me
+                      </FormLabel>
+                  </FormItem>
+                )}
+            />
           
-          <Button type="submit" className='w-full text-white ' disabled={loading}>
-            {loading ? (
-              <div className='flex gap-3'>
-                <LoaderCircleIcon className='animate-spin'/>
-                <p>Siging Up...</p>
-              </div>
-            ): (
-                <p>Sing Up</p>
-            )}
+
+            <Button type="submit" className='w-full text-white ' disabled={loading}>
+              {loading ? (
+                <div className='flex gap-3'>
+                  <LoaderCircleIcon className='animate-spin'/>
+                  <p>Siging Up...</p>
+                </div>
+              ): (
+                  <p>Sing Up</p>
+              )}
             </Button>
           </form>
         </Form>
