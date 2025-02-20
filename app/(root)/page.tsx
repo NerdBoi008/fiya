@@ -1,20 +1,42 @@
 'use client'
 
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
 import { Progress } from "@/components/ui/progress";
-import { categoriesData, popularProductsData } from "@/constants/mock-data";
+import useStore from "@/lib/store/useStore";
 import { buildUrl } from "@/lib/utils";
-import { Category } from "@/types/index.types";
+import { Category, Product } from "@/types/index.types";
 import { ShoppingBagIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
 
-  const [progress, setProgress] = useState<number>(0)
+  // main state for categories and products
+  const [categories, setCategories] = useState<Category[] | null>();
+  const [products, setProducts] = useState<Product[] | null>();
+
+  const [progress, setProgress] = useState<number>(0);
   const router = useRouter();
+
+  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useStore();
+
+  useEffect(() => {
+    if (!categoriesApi) fetchCategories();
+    if (!productsApi) fetchProducts();
+
+    if (categoriesApi) setCategories(categoriesApi);
+    if (productsApi) setProducts(productsApi);
+
+  }, [categoriesApi, productsApi, fetchCategories, fetchProducts]);
+  
 
   return (
     <main className="">
@@ -26,10 +48,10 @@ export default function Home() {
       <div className="flex flex-row-reverse relative">
 
         <Button
-          className="absolute z-10 bottom-3 right-3 sm:right-10 md:right-10 lg:right-20 xl:right-20 border-2 border-secondary"
+          className="absolute z-10 bottom-3 right-3 sm:right-10 md:right-10 lg:right-20 xl:right-20 border-2 border-secondary hover:bg-secondary hover:text-white"
           variant={'outline'}
           onClick={() => {
-            router.push(buildUrl('/products',{ categoryId: categoriesData[0].id}))
+            router.push(buildUrl('/products',{ categoryId: categories?.[0].id}))
           }}
         >
           <ShoppingBagIcon/>
@@ -41,10 +63,6 @@ export default function Home() {
             className="text-3xl  sm:text-5xl md:text-6xl xl:text-7xl 2xl:text-8xl text-primary select-none max-w-[70vw]">
             Pure, Healthy, Delicious: Your Gateway to Natural Goodness
           </h1>
-          <h6
-            className="max-sm:hidden select-none max-w-[65vw] text-lg xl:text-2xl" >
-            Discover our range of premium dehydrated fruits, vegetables, and snacks. Packed with nutrients, perfect for your healthy lifestyle.
-          </h6>
           <h6
             className="max-sm:visible max-sm:block max-xl:hidden hidden select-none" >
             Discover our range of premium dehydrated foods.
@@ -68,7 +86,7 @@ export default function Home() {
         <section className="space-y-4">
           <h1 className="text-heading">Popular Products</h1>
           <div className="grid max-md:grid-cols-2 max-xl:grid-cols-3 xl:grid-cols-5  w-full gap-5">
-            {popularProductsData.map(({ imgSrc, name, form, productId }, index) => (
+            {products ? products?.map(({ imgSrc, name, form, productId }, index) => (
               <div
                 key={index}
                 onClick={() => {
@@ -88,7 +106,15 @@ export default function Home() {
                   {/* <p className='text-muted-foreground'>{weight}g</p> */}
                 </div>
             </div>
-            ))}
+            )) : (
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="w-full animate-pulse">
+                  <div className="w-full h-52 bg-gray-300 rounded-md"></div>
+                  <div className="h-4 bg-gray-300 rounded-md mt-2 w-3/4"></div>
+                  <div className="h-4 bg-gray-300 rounded-md mt-1 w-1/2"></div>
+                </div>
+              ))
+            )}
           </div>
         </section>
 
@@ -100,7 +126,7 @@ export default function Home() {
                 <CarouselPrevious />
 
                 <CarouselContent >
-                {categoriesData.map(({ id, categoryName, imgSrc}: Category, index) => (
+                {categories ? categories?.map(({ id, categoryName, imgSrc}: Category, index) => (
                   <CarouselItem
                     key={index}
                     className="md:basis-1/2 lg:basis-1/3 cursor-pointer"
@@ -120,7 +146,16 @@ export default function Home() {
                         <h6 className='text-lg font-medium group-hover:text-[hsl(28,67%,44%)]'>{categoryName}</h6>
                       </div>
                     </CarouselItem>
-                  ))}
+                  )) : (
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                        <div className="w-full border-2 p-2 rounded-md animate-pulse">
+                          <div className="w-full h-48 bg-gray-300 rounded-sm"></div>
+                          <div className="h-4 bg-gray-300 rounded-md mt-2 w-3/4"></div>
+                        </div>
+                      </CarouselItem>
+                    ))
+                  )}
                 </CarouselContent>
 
                 <CarouselNext />

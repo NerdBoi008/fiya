@@ -1,11 +1,10 @@
 'use client'
 
-import { Product, QueryParams } from "@/types/index.types"
+import { Category, Product, QueryParams } from "@/types/index.types"
 import { notFound, useRouter, useSearchParams } from "next/navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
@@ -17,42 +16,71 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-import { categoriesData, popularProductsData } from "@/constants/mock-data"
 import CustomButton from "@/components/CustomButton"
 import Image from "next/image"
-import { buildUrl } from "@/lib/utils"
+import { buildUrl, cn } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import useStore from "@/lib/store/useStore"
+import BreadCrumbLinkCustom from "@/components/BreadCrumbLinkCustom"
 
 
 export default function ProductsPage() {
   
   const searchParams = useSearchParams();
-  const router = useRouter()
-  const [progress, setProgress] = useState<number>(0)
+  const router = useRouter();
+  const [progress, setProgress] = useState<number>(0);
+
+  // main state for categories and products
+  const [categories, setCategories] = useState<Category[] | null>();
+  const [products, setProducts] = useState<Product[] | null>();
+  const [productList, setProductList] = useState<Product[] | null>();
+  const [categoryId, setCategoryId] = useState<string | null>();
+
+  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useStore();
+
+  // Fetch categories and products
+  useEffect(() => {
+    if (!categoriesApi) fetchCategories();
+    if (!productsApi) fetchProducts();
+
+    if (categoriesApi) setCategories(categoriesApi);
+    if (productsApi) setProducts(productsApi);
+    
+  }, [categoriesApi, productsApi, fetchCategories, fetchProducts]);
   
-  let categoryId = searchParams.get('categoryId') as QueryParams['categoryId']
-  const productsId: string[] | undefined = categoriesData.find((item) => item.id === categoryId)?.productsId
+  // Handle categoryId from URL
+  useEffect(() => {
+    const newCategoryId = searchParams.get('categoryId') as QueryParams['categoryId'];
+    setCategoryId(newCategoryId);
 
-  // checks if categoryId query is present in the url
-  if (!categoryId) { 
-    categoryId = categoriesData[0].id
-  }
-
-  // checks if the categoryId provided in the url actually exist in categoriesData
-  if (!productsId) {
-    notFound() // navigate to NotFound page
-  } 
-
-  // THIS IS MOCK DATA REMOVE IT DURING PRODUCTION
+  }, [searchParams])
   
-  const productList: Product[] = []
+  // Handle default category and product list logic
+  useEffect(() => {
+    if (!categories || !products) return;
 
-  productsId?.forEach((item) => {
-    productList.push(popularProductsData.find((prod) => prod.productId === item)!)
-  })
+    let selectedCategoryId = categoryId;
 
+    // If categoryId is not provided in the URL, default to the first category
+    if (!selectedCategoryId && categories.length > 0) {
+      selectedCategoryId = categories[0].id;
+      setCategoryId(selectedCategoryId); // Update categoryId state
+    }
+
+    const selectedCategory = categories.find((item) => item.id === selectedCategoryId);
+    const productsId = selectedCategory?.productsId;
+
+    // If the categoryId provided in the URL does not exist, navigate to NotFound
+    if (!selectedCategory || !productsId) {
+      notFound(); // Navigate to NotFound page
+    }
+
+    // Filter products based on productsId
+    const filteredProducts = products.filter((prod) => productsId.includes(prod.productId));
+    setProductList(filteredProducts);
+  }, [categories, categoryId, products]);
+  
   return (
     <main className="container-x-padding space-y-3 flex-1">
 
@@ -61,15 +89,15 @@ export default function ProductsPage() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/" >Home</BreadcrumbLink>
+            <BreadCrumbLinkCustom href="/" >Home</BreadCrumbLinkCustom>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">Products</BreadcrumbLink>
+            <BreadCrumbLinkCustom href="#">Products</BreadCrumbLinkCustom>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">{categoriesData.find((category) => category.id === categoryId)?.categoryName}</BreadcrumbLink>
+            <BreadCrumbLinkCustom href="#">{categories?.find((category) => category.id === categoryId)?.categoryName}</BreadCrumbLinkCustom>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -80,17 +108,23 @@ export default function ProductsPage() {
         <aside className="w-56 block max-lg:hidden space-y-2 mt-3">
           <p className="text-md font-semibold">Categories</p>
           <div className="px-3">
-            {categoriesData.map((category, index) => (
+            {categories ? categories?.map((category, index) => (
               <p
                 key={index}
                 onClick={() => {
-                  router.push(buildUrl('/products', { categoryId: category.id }))
+                  router.push(buildUrl('/products', { categoryId: category.id }));
                 }}
                 className={`${(category.id === categoryId) ? 'text-primary font-semibold' : "text-muted-foreground"} block cursor-pointer hover:text-primary hover:underline`}
               >
                 {category.categoryName}
               </p>
-            ))}
+            )) : (
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="w-full animate-pulse">
+                  <div className="h-3 bg-gray-300 rounded-md mt-4 w-3/4"></div>
+                </div>
+              ))
+            )}
           </div>
         </aside>
 
@@ -98,7 +132,11 @@ export default function ProductsPage() {
 
           {/* Change category button */}
           <div className="flex justify-between items-center">
-            <h1 className="text-heading">{categoriesData.find((category) => category.id === categoryId)?.categoryName}</h1>
+            <h1 className="text-heading">
+              {categories
+                ? categories?.find((category) => category.id === categoryId)?.categoryName
+                : <div className="h-8 bg-gray-300 rounded-md w-44"></div>}
+            </h1>
             
               <DropdownMenu>
                 <DropdownMenuTrigger className="lg:hidden">
@@ -112,12 +150,13 @@ export default function ProductsPage() {
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Categories</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                  {categoriesData.map((category) => (
+                  {categories?.map((category) => (
                     <DropdownMenuItem
                       key={category.id}
                       onClick={() => {
                         router.push(buildUrl('/products', { categoryId: category.id }))
                       }}
+                      className={cn((category.id === categoryId) ? 'bg-primary text-white' : '')}
                     >{category.categoryName}</DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -126,13 +165,13 @@ export default function ProductsPage() {
 
           {/* All products grid */}
           <div className="grid max-md:grid-cols-2 max-xl:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5  w-full max-sm:gap-2 gap-4">
-            {productList.map(({ productId, weight, actualPrice, offerPrice, imgSrc, name, form, rating }: Product, index) => {
+            {productList ? productList?.map(({ productId, weight, actualPrice, offerPrice, imgSrc, name, form, rating }: Product, index) => {
               return (
               <div
                 key={index}
                 onClick={() => {
                   setProgress(70)
-                  router.push(buildUrl('/products/product-details',{ productId: productId, categoryId: categoryId}))
+                  router.push(buildUrl('/products/product-details',{ productId: productId, categoryId: categoryId || undefined }))
                 }}
                 className='flex flex-col justify-between group w-full cursor-pointer relative p-3 border-2 rounded-md card-hover-effects'
               >
@@ -176,7 +215,26 @@ export default function ProductsPage() {
                 </div>
 
             </div>
-            )})}
+              )
+            }) : (
+              Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col justify-between w-full relative p-3 border-2 rounded-md animate-pulse"
+                >
+                  <div className="w-full h-52 bg-gray-300 rounded-md"></div>
+                  <div className="h-4 bg-gray-300 rounded-md mt-2 w-3/4"></div>
+                  <div className="flex flex-row w-full justify-between mt-1">
+                    <div className="h-4 bg-gray-300 rounded-md w-1/4"></div>
+                    <div className="h-4 bg-gray-300 rounded-md w-1/4"></div>
+                  </div>
+                  <div className="flex gap-2 items-center justify-between mt-2">
+                    <div className="h-6 bg-gray-300 rounded-md w-1/3"></div>
+                    <div className="h-6 bg-gray-300 rounded-md w-10"></div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </aside>
       </section>

@@ -8,11 +8,16 @@ interface StroreState {
     fetchProducts: () => void;
 }
 
-const useStore = create<StroreState>((set) => ({
+const useStore = create<StroreState>((set, get) => ({
     categories: null,
     products: null,
 
     fetchCategories: async () => {
+        // Check if categories are already loaded
+        if (get().categories) {
+            return;
+        }
+        
         try {
             const res = await fetch("/api/categories");
             const data = await res.json();
@@ -23,6 +28,11 @@ const useStore = create<StroreState>((set) => ({
     },
 
     fetchProducts: async () => {
+        // Check if products are already loaded
+        if (get().products) {
+            return;
+        }
+        
         try {
             const res = await fetch("/api/products");
             const data = await res.json();

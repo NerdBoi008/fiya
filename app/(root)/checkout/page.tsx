@@ -1,7 +1,7 @@
 'use client'
 
 import CustomButton from '@/components/CustomButton'
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { companyAddress, supportEmail } from '@/constants/index.constants'
@@ -11,6 +11,8 @@ import { useRouter, } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { cartProductDetails } from '@/constants/mock-data'
+import BreadCrumbLinkCustom from '@/components/BreadCrumbLinkCustom'
+// import Link from 'next/link'
 
 const CheckoutPage = () => {
   
@@ -51,11 +53,11 @@ const CheckoutPage = () => {
         <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                  <BreadcrumbLink href="/" >Home</BreadcrumbLink>
+                <BreadCrumbLinkCustom href="/" >Home</BreadCrumbLinkCustom>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">Checkout</BreadcrumbLink>
+                <BreadCrumbLinkCustom href="#">Checkout</BreadCrumbLinkCustom>
                 </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
