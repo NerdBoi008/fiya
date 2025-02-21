@@ -22,25 +22,39 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { cartProductDetails, popularProductsData } from '@/constants/mock-data';
+// import { cartProductDetails, popularProductsData } from '@/constants/mock-data';
 import { useRouter } from 'next/navigation';
 import { buildUrl } from '@/lib/utils';
 import CustomButton from './CustomButton';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-import { User } from '@/types/index.types';
+import { Product, User } from '@/types/index.types';
 import { Button } from './ui/button';
 import { getSignedInUser, signOut } from '@/lib/appwrite/server/user.actions';
+import useCartStore from '@/lib/store/cartStore';
+import useDataStore from '@/lib/store/dataStore';
 
 const Navbar = () => {
 
-  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState<boolean>(false)
-  const [search, setSearch] = useState<{productName: string, productId: string}[]>()
-  const router = useRouter()
+  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState<boolean>(false);
+  const [search, setSearch] = useState<{ productName: string, productId: string, productImage: string }[]>();
+  const router = useRouter();
 
-  const [cartItemsCount, setCartItemsCount] = useState<number>(0)
-  const [signedInUser, setSignedInUser] = useState<User | null>(null)
+  const [products, setProducts] = useState<Product[] | null>();
 
+  const [cartItemsCount, setCartItemsCount] = useState<number>(0);
+  const [signedInUser, setSignedInUser] = useState<User | null>(null);
+
+  const { cart } = useCartStore();
+
+  const { products: productsApi, fetchProducts } = useDataStore();
+
+  useEffect(() => {
+    if (!productsApi) fetchProducts();
+
+    if (productsApi) setProducts(productsApi);
+
+  }, [productsApi, fetchProducts]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -49,24 +63,26 @@ const Navbar = () => {
     };
 
     fetchUser();
-
-    setCartItemsCount(cartProductDetails.length)
     
   }, [])
 
   useEffect(() => {
-    setCartItemsCount(cartProductDetails.length)
-  }, [cartItemsCount])
+    setCartItemsCount(cart.length);
+  }, [cart.length, cartItemsCount])
   
   
 
   function onSubmit({ searchQuery }: { searchQuery: string }) {
     
     // Searches product from products array
-    setSearch(popularProductsData.filter((product) => {
+    setSearch(products?.filter((product) => {
       return product.name.includes(searchQuery)
     }).map((item) => {
-      return { productName: item.name, productId: item.productId }
+      return {
+        productName: item.name,
+        productId: item.productId,
+        productImage: item.imgSrc,
+      }
     }))
     
     if (searchQuery === 'Enter') {
@@ -126,14 +142,26 @@ const Navbar = () => {
               />
               <ScrollArea className='h-full pb-10'>
                 {search?.map((product, index) => (
-                  <div key={index} className='cursor-pointer'>
-                    <p
-                      className='mt-2'
-                      onClick={() => {
-                        setIsSearchDialogOpen(false)
-                        router.push(buildUrl('/products/product-details', { search: product.productId }))
-                      }}
-                    >{product.productName}</p>
+                  <div
+                    key={index}
+                    className='cursor-pointer mb-3'
+                  >
+                    <div className='flex gap-3'>
+                      <Image
+                        src={product.productImage}
+                        height={56}
+                        width={56}
+                        alt={product.productName}
+                        className='size-10 object-cover'
+                      />
+                      <p
+                        className='mt-2'
+                        onClick={() => {
+                          setIsSearchDialogOpen(false)
+                          router.push(buildUrl('/products/product-details', { search: product.productId }))
+                        }}
+                      >{product.productName}</p>
+                    </div>
                     <Separator />
                   </div>
                 ))}

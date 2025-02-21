@@ -9,7 +9,7 @@ import {
   CarouselPrevious
 } from "@/components/ui/carousel";
 import { Progress } from "@/components/ui/progress";
-import useStore from "@/lib/store/useStore";
+import useDataStore from "@/lib/store/dataStore";
 import { buildUrl } from "@/lib/utils";
 import { Category, Product } from "@/types/index.types";
 import { ShoppingBagIcon } from "lucide-react";
@@ -26,7 +26,7 @@ export default function Home() {
   const [progress, setProgress] = useState<number>(0);
   const router = useRouter();
 
-  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useStore();
+  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useDataStore();
 
   useEffect(() => {
     if (!categoriesApi) fetchCategories();

@@ -21,8 +21,9 @@ import Image from "next/image"
 import { buildUrl, cn } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
 import { useEffect, useState } from "react"
-import useStore from "@/lib/store/useStore"
 import BreadCrumbLinkCustom from "@/components/BreadCrumbLinkCustom"
+import useDataStore from "@/lib/store/dataStore"
+import useCartStore from "@/lib/store/cartStore"
 
 
 export default function ProductsPage() {
@@ -37,7 +38,8 @@ export default function ProductsPage() {
   const [productList, setProductList] = useState<Product[] | null>();
   const [categoryId, setCategoryId] = useState<string | null>();
 
-  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useStore();
+  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useDataStore();
+  const { addToCart } = useCartStore();
 
   // Fetch categories and products
   useEffect(() => {
@@ -204,6 +206,15 @@ export default function ProductsPage() {
                     leadingIcon="/add-cart.svg"
                     onClick={function (event: React.MouseEvent): void {
                       event.stopPropagation()
+                      addToCart({
+                        productId: productId,
+                        productName: name,
+                        imgSrc: imgSrc,
+                        weight: weight,
+                        actualPrice: actualPrice,
+                        offerPrice: offerPrice,
+                        quantity: 1
+                      })
                     }}
                     classNames="border-[1px]"
                       />

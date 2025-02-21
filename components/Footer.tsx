@@ -38,7 +38,7 @@ const Footer = () => {
           </section>
 
           <div className='bg-primary container-x-padding flex justify-between py-3 gap-5'>
-              <p className='text-white'>&copy; 2024 Fiya production</p>
+              <p className='text-white'>&copy; 2025 Fiya production</p>
               <aside className='flex flex-row gap-3 max-md:flex-col'>
                   {policyLinks.map((links, index) => (
                       <Link key={index} href={links.link} className='text-white max-md:text-end'>{links.name}</Link>

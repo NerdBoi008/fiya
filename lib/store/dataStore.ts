@@ -8,7 +8,7 @@ interface StroreState {
     fetchProducts: () => void;
 }
 
-const useStore = create<StroreState>((set, get) => ({
+const useDataStore = create<StroreState>((set, get) => ({
     categories: null,
     products: null,
 
@@ -43,4 +43,4 @@ const useStore = create<StroreState>((set, get) => ({
     },
 }));
 
-export default useStore;
+export default useDataStore;

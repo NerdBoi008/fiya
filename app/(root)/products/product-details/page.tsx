@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import useStore from '@/lib/store/useStore'
+import useCartStore from '@/lib/store/cartStore'
+import useDataStore from '@/lib/store/dataStore'
 import { buildUrl } from '@/lib/utils'
 import { Category, Product, QueryParams } from '@/types/index.types'
 import Image from 'next/image'
@@ -31,7 +32,9 @@ export default function ProductDetailsPage() {
   
   const [mainImageSrc, setMainImageSrc] = useState<string | null>();
 
-  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useStore();
+  const { categories: categoriesApi, products: productsApi, fetchCategories, fetchProducts } = useDataStore();
+  
+  const { addToCart } = useCartStore();
 
   // Get productId or search query from URL
   const productId: string | undefined = (searchParams.get('productId') as QueryParams['productId']) ?
@@ -70,7 +73,7 @@ export default function ProductDetailsPage() {
     return <div>Loading...</div>;
   }
 
-  const { productId: prodId , otherImgSrcSet, name, form, weight, actualPrice, offerPrice,  rating, ingredients, description, highlights, }: Product = product
+  const { productId: prodId , otherImgSrcSet, name, form, weight, actualPrice, offerPrice,  rating, ingredients, description, highlights, imgSrc}: Product = product
 
     return (
       <main className='container-x-padding space-y-3 w-full flex-1'>
@@ -121,7 +124,15 @@ export default function ProductDetailsPage() {
           <div className='flex gap-2 '>
             <CustomButton
               onClick={function (): void {
-              throw new Error('Function not implemented.')
+                addToCart({
+                  productId: prodId,
+                  productName: name,
+                  imgSrc: imgSrc,
+                  weight: weight,
+                  actualPrice: actualPrice,
+                  offerPrice: offerPrice,
+                  quantity: 1,
+                })
               }}
               variant={'outline'}
               leadingIcon='/add-cart.svg'

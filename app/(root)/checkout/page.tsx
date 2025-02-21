@@ -1,7 +1,12 @@
 'use client'
 
 import CustomButton from '@/components/CustomButton'
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator
+} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { companyAddress, supportEmail } from '@/constants/index.constants'
@@ -10,27 +15,30 @@ import Image from 'next/image'
 import { useRouter, } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
-import { cartProductDetails } from '@/constants/mock-data'
+// import { cartProductDetails } from '@/constants/mock-data'
 import BreadCrumbLinkCustom from '@/components/BreadCrumbLinkCustom'
-// import Link from 'next/link'
+import useCartStore from '@/lib/store/cartStore'
+import { ShoppingBagIcon } from 'lucide-react'
 
 const CheckoutPage = () => {
   
-  const router = useRouter()
+  const router = useRouter();
 
-  const [subTotal, setSubTotal] = useState<number>(0)
-  const [discountTotal, setDiscountTotal] = useState<number>(0)
-  const [grandTotal, setGrandTotal] = useState<number>(0)
-  const [progress, setProgress] = useState<number>(0)
+  const [subTotal, setSubTotal] = useState<number>(0);
+  const [discountTotal, setDiscountTotal] = useState<number>(0);
+  const [grandTotal, setGrandTotal] = useState<number>(0);
+  const [progress, setProgress] = useState<number>(0);
+
+  const { cart, removeFromCart, updateQuantity } = useCartStore();
 
   const shippingCharges: number = 123
   
   useEffect(() => {
-    const subTotal = cartProductDetails
+    const subTotal = cart
       .map((item) => item.actualPrice * item.quantity)
       .reduce((accumulator, current) => accumulator + current, 0);
   
-    const discountTotal = cartProductDetails
+    const discountTotal = cart
       .map((item) => (item.actualPrice - item.offerPrice) * item.quantity)
       .reduce((accumulator, current) => accumulator + current, 0);
   
@@ -40,7 +48,7 @@ const CheckoutPage = () => {
     setSubTotal(subTotal);
     setDiscountTotal(discountTotal);
     setGrandTotal(grandTotal);
-  }, [shippingCharges]);
+  }, [cart, shippingCharges]);
 
   return (
     <main className='container-x-padding space-y-3 flex-1'>
@@ -72,7 +80,7 @@ const CheckoutPage = () => {
 
             {/* Products List */}
             <div className='flex flex-col gap-3'>
-              {cartProductDetails.map((item) => {
+              {(cart.length > 0) ? cart.map((item) => {
 
                 const { imgSrc, productId, weight, actualPrice, offerPrice, quantity, productName } = item
 
@@ -85,12 +93,13 @@ const CheckoutPage = () => {
                             router.push(buildUrl('/products/product-details', { productId: productId}))
                           }}
                         >
-                            <div className='flex gap-3'>
+                            <div className='flex gap-3 flex-row max-[425px]:flex-col'>
                                 <Image
-                                src={imgSrc}
-                                alt={productName}
-                                height={100}
-                                width={100}
+                                  src={imgSrc}
+                                  alt={productName} 
+                                  height={100}
+                                  width={100}
+                                  className='size-32 object-cover'
                                 />
                                 <div>
                                     <p className='text-xl '>{productName}</p>
@@ -114,10 +123,10 @@ const CheckoutPage = () => {
                                       height={12}
                                       width={12}
                                       onClick={(event) => {
-                                        event.stopPropagation()
-
+                                        event.stopPropagation();
+                                        updateQuantity(productId, (cart.find((i) => i.productId === productId)?.quantity || 0) - 1)
                                       }}
-                                  />
+                                      />
                                   <p className='text-xl'>{quantity}</p>
                                   <Image
                                       src='/add.svg'
@@ -127,7 +136,7 @@ const CheckoutPage = () => {
                                       width={12}
                                       onClick={(event) => {
                                         event.stopPropagation()
-
+                                        updateQuantity(productId, (cart.find((i) => i.productId === productId)?.quantity || 0) + 1)
                                       }}
                                   />
                             </div>
@@ -136,7 +145,7 @@ const CheckoutPage = () => {
                       </div>
                     <div
                       onClick={() => {
-
+                        removeFromCart(productId);
                       }}
                       className='flex select-none items-center px-2 rounded-r-md bg-slate-200 cursor-pointer'>
                           <Image
@@ -147,9 +156,32 @@ const CheckoutPage = () => {
                           />
                         </div>
                     </div>
-                  )})}
+                )
+              }) : (
+                  <div className='flex justify-center items-center flex-col'>
+                    <Image
+                      src={'/assets/no-cart-items.jpg'}
+                      alt={''}
+                      height={300}
+                      width={300}
+                      className='size-48 object-cover'
+                    />
+                    <h1 className='text-muted-foreground'>No items in cart?</h1>
+                    <Button
+                      variant={'outline'}
+                      className='border-primary mt-5'
+                      onClick={() => {
+                        router.push('/products')
+                      }}
+                    >
+                      <ShoppingBagIcon/>
+                      Browse products
+                    </Button>
+                  </div>
+              )}
             </div>
           </div>
+          <p className='text-[12px] text-muted-foreground'>* Your cart data is stored in your browser&apos;s local storage. It may be cleared or unavailable on other devices when you log in.</p>
 
           {/* User Details */}
           <div className="border-2 rounded-md p-4">
@@ -213,7 +245,7 @@ const CheckoutPage = () => {
             Pay &#8377; {grandTotal}
           </Button>
 
-          <p className='text-sm text-muted-foreground'>* After clicking the button you&apos;ll be redirected to our payment gateway page to procced with payment process.</p>
+          <p className='text-[12px] text-muted-foreground'>* After clicking the button you&apos;ll be redirected to our payment gateway page to procced with payment process.</p>
           
         </aside>
       </section>
